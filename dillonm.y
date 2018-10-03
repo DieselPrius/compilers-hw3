@@ -385,6 +385,7 @@ N_FACTOR        : N_SIGN N_VARIABLE
                     }
                 | T_LPAREN N_EXPR T_RPAREN
                     {
+                        copyArray($$.type,$2.type);
                         prRule("N_FACTOR", "T_LPAREN N_EXPR T_RPAREN");
                     }
                 | T_NOT N_FACTOR
@@ -577,7 +578,12 @@ N_MULTOPLST     : /* epsilon */
                 ;
 N_OUTPUT        : N_EXPR
                     {
-                        copyArray($$.type,$1.type);
+                        //printf("%s\n",$1.type);
+                        //printf("%s\n",$1.baseType);
+                        //if($1.type != ARRAY)
+                            copyArray($$.type,$1.type);
+                        //else
+                        //    copyArray($$.type, $1.baseType);
                         prRule("N_OUTPUT", "N_EXPR");
                     }
                 ;
@@ -885,7 +891,7 @@ N_VARIDENT      : T_IDENT
                         }
                     }
                 ;
-N_WHILE         : T_WHILE N_EXPR T_DO N_STMT
+N_WHILE         : T_WHILE N_EXPR
                     {
                         if($2.type != "") //just in case type is empty
                         {
@@ -899,11 +905,13 @@ N_WHILE         : T_WHILE N_EXPR T_DO N_STMT
                         }
                         prRule("N_WHILE", "T_WHILE N_EXPR T_DO N_STMT");
                     }
+                    T_DO N_STMT
                 ;
 N_WRITE         : T_WRITE T_LPAREN N_OUTPUT N_OUTPUTLST T_RPAREN
                     {
                         std::string outType = $3.type;
-                        
+                        if(outType == "ARRAY")
+                            outType = $3.baseType;
                         if(outType != "INTEGER" && outType != "CHAR")
                         {
                             yyerror("Output expression must be of type integer or char");
